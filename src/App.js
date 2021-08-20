@@ -1,54 +1,40 @@
-import React, { Component } from 'react';
+
+import React, {useState, useEffect} from 'react';
 import BillCollection from './components/BillCollection';
-import BillsCast from '././components/YourCast';
+import BillsCast from './components/BillsCast';
 
-const billUrl = 'http://localhost:3000/bills';
+export default function App() {
 
-class App extends Component {
-  state = {
-    bills: [],
-  };
+  const billsAPI = "http://localhost:8002/bills"
 
-  componentDidMount() {
-    fetch(billUrl)
-      .then((res) => res.json())
-      .then((bills) => this.setState({ bills }));
+  const [bills, setBills] = useState([])
+
+  useEffect((() => (
+    fetch(billsAPI)
+    .then(resp => resp.json())
+    .then(data => setBills(data))
+  )), [])
+
+  function castBill(id) {
+    setBills(bills.map(bill => 
+        bill.id === id ? {...bill, isCast: true} : bill
+      ))
   }
 
-  castBill = (bill) => {
-    const newBill = { ...bill, cast: true };
-    this.setState({ bills: this.state.bills.map((b) => (b === bill ? newBill : b)) });
-  };
-
-  releaseBill = (bill) => {
-    // this.setState({
-    //   castBills: [...this.state.castBills.filter((b) => b !== bill)],
-    // });
-  };
-
-  fireBill = (bill) => {
-    // this.releaseBill(bill);
-    // this.setState({
-    //   bills: [...this.state.bills.filter((b) => b !== bill)],
-    // });
-  };
-
-  render() {
-    return (
-      <div>
-        <BillsCast
-          handleClick={this.releaseBill}
-          handleFire={this.fireBill}
-          bills={this.state.bills.filter((bill) => bill.cast)}
-        />
-        <BillCollection
-          handleClick={this.castBill}
-          handleFire={this.fireBill}
-          bills={this.state.bills}
-        />
-      </div>
-    );
+  function removeBill(id) {
+    setBills(bills.map(bill => 
+        bill.id === id ? {...bill, isCast: false} : bill
+      ))
   }
+
+  function fireBill(id) {
+    setBills(bills.filter(bill => bill.id !== id))
+  }
+
+  return (
+    <div>
+      <BillsCast bills={bills.filter(bill => bill.isCast)} handleClick={removeBill} fireBill={fireBill}/>
+      <BillCollection bills={bills} handleClick={castBill} fireBill={fireBill}/>
+    </div>
+  );
 }
-
-export default App;
